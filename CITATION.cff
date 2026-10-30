@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use rollout-stats in your research, please cite it as below."
+title: "rollout-stats: honest statistics for robot policy evaluations"
+authors:
+  - family-names: Chen
+    given-names: Wen
+version: 0.1.0
+date-released: 2026-10-29
+license: Apache-2.0
+repository-code: "https://github.com/WayneUSC/rollout-stats"
+keywords:
+  - robot learning
+  - policy evaluation
+  - confidence intervals
+  - sequential testing

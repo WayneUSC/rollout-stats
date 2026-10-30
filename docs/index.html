@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rollout Calculator</title>
+<meta name="description" content="How sure is a robot policy's success rate? Is A really better than B? How many rollouts do you need? Exact statistics in your browser.">
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1b;--muted:#6b6b66;--line:#e4e3de;--accent:#3b5bdb;--soft:#dbe1fb;--base:#868e96;
+--good:#2b8a3e;--goodbg:#ebf7ee;--warn:#c77700;--warnbg:#fff4e0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141413;--card:#1e1e1c;--ink:#ecebe6;--muted:#a3a29b;
+--line:#33332f;--accent:#7b93f0;--soft:#2a3150;--base:#8b8b84;--good:#58c27a;--goodbg:#1d2e22;--warn:#f0a73c;--warnbg:#33281a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 16px 64px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.tool{font-size:13px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+h1{font-size:30px;line-height:1.2;margin:6px 0 6px;font-weight:700}
+.lead{color:var(--muted);margin:0 0 8px;max-width:640px}
+.lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.lang button{border:0;background:transparent;color:var(--muted);padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:18px 0}
+.card h2{font-size:19px;margin:0 0 4px}.q{color:var(--muted);font-size:14px;margin:0 0 14px}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+label{display:flex;flex-direction:column;font-size:13px;color:var(--muted);gap:4px}
+input{font:inherit;font-size:17px;width:104px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.out{margin-top:16px;font-size:17px}
+.big{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.muted{color:var(--muted);font-size:14px}
+.pill{display:inline-block;font-size:13px;font-weight:700;padding:3px 12px;border-radius:999px;margin-top:8px}
+.pill.good{background:var(--goodbg);color:var(--good)}.pill.warn{background:var(--warnbg);color:var(--warn)}
+svg{width:100%;max-width:560px;height:auto;display:block;margin-top:10px}
+footer{color:var(--muted);font-size:13px;margin-top:28px}
+a{color:var(--accent)}
+code{font-size:13px;background:var(--bg);padding:2px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div>
+    <div class="tool">rollout-stats</div>
+    <h1 data-i18n="title">Is your policy's improvement real?</h1>
+    <p class="lead" data-i18n="lead">Exact statistics for robot evaluations with 10–100 rollouts. Everything runs in your browser.</p>
+  </div>
+  <div class="lang" role="group" aria-label="language">
+    <button id="en" aria-pressed="true">EN</button><button id="zh" aria-pressed="false">中文</button>
+  </div>
+</header>
+
+<section class="card">
+  <h2 data-i18n="h1">How sure is one success rate?</h2>
+  <p class="q" data-i18n="q1">95% Wilson interval — well behaved even at 0/20 or 20/20.</p>
+  <div class="row">
+    <label><span data-i18n="succ">successes</span><input id="k1" type="number" min="0" value="17"></label>
+    <label><span data-i18n="trials">rollouts</span><input id="n1" type="number" min="1" value="25"></label>
+  </div>
+  <div class="out" id="o1"></div>
+</section>
+
+<section class="card">
+  <h2 data-i18n="h2">Is A better than B?</h2>
+  <p class="q" data-i18n="q2">Two-sided Fisher exact test and Newcombe interval for the difference (independent rollouts).</p>
+  <div class="row">
+    <label><span data-i18n="succA">A successes</span><input id="ka" type="number" min="0" value="17"></label>
+    <label><span data-i18n="trialsA">A rollouts</span><input id="na" type="number" min="1" value="25"></label>
+    <label><span data-i18n="succB">B successes</span><input id="kb" type="number" min="0" value="11"></label>
+    <label><span data-i18n="trialsB">B rollouts</span><input id="nb" type="number" min="1" value="25"></label>
+  </div>
+  <div class="out" id="o2"></div>
+</section>
+
+<section class="card">
+  <h2 data-i18n="h3">How many rollouts do I need?</h2>
+  <p class="q" data-i18n="q3">Exact power of Fisher's test, by enumerating every possible outcome.</p>
+  <div class="row">
+    <label><span data-i18n="pa">expected A rate</span><input id="pa" type="number" min="0" max="1" step="0.05" value="0.8"></label>
+    <label><span data-i18n="pb">expected B rate</span><input id="pb" type="number" min="0" max="1" step="0.05" value="0.6"></label>
+    <label><span data-i18n="pw">power</span><input id="pw" type="number" min="0.5" max="0.99" step="0.05" value="0.8"></label>
+  </div>
+  <div class="out" id="o3"></div>
+</section>
+
+<footer>
+  <span data-i18n="foot">Python package, paired tests, multiple-comparison correction and anytime-valid sequential tests:</span>
+  <a href="https://github.com/WayneUSC/rollout-stats">github.com/WayneUSC/rollout-stats</a>
+</footer>
+</main>
+<script>
+const T = {
+  en: {title:"Is your policy's improvement real?", lead:"Exact statistics for robot evaluations with 10–100 rollouts. Everything runs in your browser.",
+    h1:"How sure is one success rate?", q1:"95% Wilson interval — well behaved even at 0/20 or 20/20.", succ:"successes", trials:"rollouts",
+    h2:"Is A better than B?", q2:"Two-sided Fisher exact test and Newcombe interval for the difference (independent rollouts).",
+    succA:"A successes", trialsA:"A rollouts", succB:"B successes", trialsB:"B rollouts",
+    h3:"How many rollouts do I need?", q3:"Exact power of Fisher's test, by enumerating every possible outcome.",
+    pa:"expected A rate", pb:"expected B rate", pw:"power",
+    foot:"Python package, paired tests, multiple-comparison correction and anytime-valid sequential tests:",
+    ci:(lo,hi)=>`95% interval ${lo} – ${hi}`, pm:h=>`about ±${h} points`,
+    need:(n)=>`For ±5 points at this rate you would need about ${n} rollouts.`,
+    diff:(d,lo,hi)=>`difference ${d} (95% CI ${lo} to ${hi})`, pval:p=>`Fisher exact p = ${p}`,
+    sig:(w)=>`${w} is better`, ns:"not significant", inc:"inconclusive — far more rollouts needed",
+    nper:(n,t)=>`${n} rollouts per policy (${t} total)`, cap:"more than 2000 per policy", eq:"rates are equal — nothing to detect",
+    plan:(n)=>`If these rates are the truth, ~${n} rollouts per policy give 80% power.`, bad:"check the inputs"},
+  zh: {title:"你的策略真的变好了吗？", lead:"面向 10–100 次实机测试的精确统计。全部在浏览器本地计算。",
+    h1:"一个成功率有多可信？", q1:"95% Wilson 置信区间——即使 0/20 或 20/20 也不会失真。", succ:"成功次数", trials:"测试次数",
+    h2:"A 真的比 B 好吗？", q2:"双侧 Fisher 精确检验，以及差值的 Newcombe 置信区间（两组独立测试）。",
+    succA:"A 成功", trialsA:"A 次数", succB:"B 成功", trialsB:"B 次数",
+    h3:"需要测多少次？", q3:"枚举所有可能结果，计算 Fisher 检验的精确统计功效。",
+    pa:"预期 A 成功率", pb:"预期 B 成功率", pw:"统计功效",
+    foot:"Python 包（含配对检验、多重比较校正、可随时停止的序贯检验）：",
+    ci:(lo,hi)=>`95% 区间 ${lo} – ${hi}`, pm:h=>`约 ±${h} 个百分点`,
+    need:(n)=>`想把误差缩到 ±5 个百分点，大约需要 ${n} 次测试。`,
+    diff:(d,lo,hi)=>`差值 ${d}（95% 区间 ${lo} 到 ${hi}）`, pval:p=>`Fisher 精确检验 p = ${p}`,
+    sig:(w)=>`${w} 更好`, ns:"差异不显著", inc:"无法下结论——需要多得多的测试",
+    nper:(n,t)=>`每个策略 ${n} 次（共 ${t} 次）`, cap:"每个策略超过 2000 次", eq:"两个成功率相同，无差异可检测",
+    plan:(n)=>`如果这就是真实成功率，每个策略约 ${n} 次测试才有 80% 的把握测出差异。`, bad:"请检查输入"}
+};
+let L = "en";
+const $ = id => document.getElementById(id);
+const pct = (x, d=0) => (100*x).toFixed(d) + "%";
+const spct = x => (x >= 0 ? "+" : "−") + (100*Math.abs(x)).toFixed(0) + "%";
+const Z = 1.959963984540054;
+
+const LF = [0];
+function lf(n){ while (LF.length <= n) LF.push(LF[LF.length-1] + Math.log(LF.length)); return LF[n]; }
+const lc = (n,k) => lf(n) - lf(k) - lf(n-k);
+
+function wilson(k, n){
+  const p = k/n, d = 1 + Z*Z/n, c = (p + Z*Z/(2*n))/d, h = Z*Math.sqrt(p*(1-p)/n + Z*Z/(4*n*n))/d;
+  return [k === 0 ? 0 : Math.max(0, c-h), k === n ? 1 : Math.min(1, c+h)];
+}
+function newcombe(k1,n1,k2,n2){
+  const p1=k1/n1, p2=k2/n2, [l1,u1]=wilson(k1,n1), [l2,u2]=wilson(k2,n2), d=p1-p2;
+  return [Math.max(-1, d - Math.hypot(p1-l1, u2-p2)), Math.min(1, d + Math.hypot(u1-p1, p2-l2))];
+}
+function twoSided(pmf){
+  const s = [...pmf].sort((a,b)=>a-b), cs = []; let acc = 0;
+  for (const v of s){ acc += v; cs.push(acc); }
+  return pmf.map(v => { let lo=0, hi=s.length; const t=v*(1+1e-7); while(lo<hi){const m=(lo+hi)>>1; if(s[m]<=t) lo=m+1; else hi=m;} return Math.min(1, cs[lo-1]); });
+}
+function fisher(ka,na,kb,nb){
+  const N=na+nb, s=ka+kb, a0=Math.max(0,s-nb), a1=Math.min(na,s), pmf=[];
+  for (let a=a0; a<=a1; a++) pmf.push(Math.exp(lc(na,a)+lc(nb,s-a)-lc(N,s)));
+  return twoSided(pmf)[ka-a0];
+}
+function binom(n, p){ const out=[]; for(let k=0;k<=n;k++){ out.push(p<=0? (k===0?1:0) : p>=1 ? (k===n?1:0) : Math.exp(lc(n,k)+k*Math.log(p)+(n-k)*Math.log(1-p))); } return out; }
+function power(pa, pb, n, alpha=0.05){
+  const N=2*n, A=binom(n,pa), B=binom(n,pb); let pw=0;
+  for (let s=0; s<=N; s++){
+    const a0=Math.max(0,s-n), a1=Math.min(n,s), pmf=[];
+    for (let a=a0; a<=a1; a++) pmf.push(Math.exp(lc(n,a)+lc(n,s-a)-lc(N,s)));
+    const pv = twoSided(pmf);
+    for (let i=0;i<pmf.length;i++) if (pv[i] <= alpha*(1+1e-9)) pw += A[a0+i]*B[s-a0-i];
+  }
+  return pw;
+}
+function nPerArm(pa, pb, target){
+  if (pa === pb) return -1;
+  const ok = n => power(pa,pb,n) >= target;
+  let lo=1, hi=2;
+  while(!ok(hi)){ lo=hi; hi*=2; if(hi>2048) return Infinity; }
+  while(hi-lo>1){ const m=(lo+hi)>>1; if(ok(m)) hi=m; else lo=m; }
+  while(hi>2 && ok(hi-1)) hi--;
+  return hi;
+}
+function expHalf(p, n){ const b=binom(n,p); let e=0; for(let k=0;k<=n;k++){ const [l,u]=wilson(k,n); e+=b[k]*(u-l)/2; } return e; }
+function nForHalf(p, h){ let n=1; while(expHalf(p,n)>h && n<20000) n = Math.ceil(n*1.25)+1; let lo=Math.max(1,Math.floor(n/1.25)-1); while(lo<n){const m=(lo+n)>>1; if(expHalf(p,m)>h) lo=m+1; else n=m;} return n; }
+
+function bar(lo, hi, p, color){
+  const X = v => 16 + v*368;
+  let g = `<svg viewBox="0 0 400 52" role="img" aria-label="interval">`;
+  for (let i=0;i<=4;i++){ const x=X(i/4); g += `<line x1="${x}" y1="6" x2="${x}" y2="30" stroke="var(--line)"/><text x="${x}" y="46" font-size="11" fill="var(--muted)" text-anchor="middle">${i*25}%</text>`; }
+  g += `<line x1="${X(lo)}" y1="18" x2="${X(hi)}" y2="18" stroke="${color}" stroke-width="5" stroke-linecap="round"/><circle cx="${X(p)}" cy="18" r="8" fill="${color}"/></svg>`;
+  return g;
+}
+const int = id => Math.round(Number($(id).value));
+
+function r1(){
+  const k=int("k1"), n=int("n1"), t=T[L];
+  if (!(n>0 && k>=0 && k<=n)) { $("o1").innerHTML = `<span class="muted">${t.bad}</span>`; return; }
+  const [lo,hi]=wilson(k,n), p=k/n;
+  $("o1").innerHTML = `<div class="big">${pct(p,1)}</div><div>${t.ci(pct(lo,1),pct(hi,1))} · <span class="muted">${t.pm(((hi-lo)*50).toFixed(0))}</span></div>`
+    + bar(lo,hi,p,"var(--accent)") + (n<200 ? `<div class="muted">${t.need(nForHalf(Math.min(Math.max(p,.02),.98), .05))}</div>` : "");
+}
+function r2(){
+  const ka=int("ka"), na=int("na"), kb=int("kb"), nb=int("nb"), t=T[L];
+  if (!(na>0 && nb>0 && ka>=0 && kb>=0 && ka<=na && kb<=nb && na+nb<=4000)) { $("o2").innerHTML = `<span class="muted">${t.bad}</span>`; return; }
+  const p = fisher(ka,na,kb,nb), [lo,hi]=newcombe(ka,na,kb,nb), d=ka/na-kb/nb;
+  let verdict;
+  if (p < 0.05) verdict = `<span class="pill good">${t.sig(d>0?"A":"B")}</span>`;
+  else if (hi-lo > 0.4) verdict = `<span class="pill warn">${t.inc}</span>`;
+  else verdict = `<span class="pill warn">${t.ns}</span>`;
+  const [la,ua]=wilson(ka,na), [lb,ub]=wilson(kb,nb);
+  let plan = "";
+  if (p >= 0.05 && d !== 0 && na+nb < 400){ const n = nPerArm(Math.min(Math.max(ka/na,.01),.99), Math.min(Math.max(kb/nb,.01),.99), 0.8); if (isFinite(n) && n>0) plan = `<div class="muted">${t.plan(n)}</div>`; }
+  $("o2").innerHTML = `<div class="big">${spct(d)}</div><div>${t.diff(spct(d),spct(lo),spct(hi))} · ${t.pval(p<1e-4?"<0.0001":p.toPrecision(3))}</div>${verdict}`
+    + `<div class="muted" style="margin-top:8px">A</div>${bar(la,ua,ka/na,"var(--accent)")}<div class="muted">B</div>${bar(lb,ub,kb/nb,"var(--base)")}` + plan;
+}
+function r3(){
+  const pa=Number($("pa").value), pb=Number($("pb").value), pw=Number($("pw").value), t=T[L];
+  if (!(pa>=0 && pa<=1 && pb>=0 && pb<=1 && pw>0.5 && pw<1)) { $("o3").innerHTML = `<span class="muted">${t.bad}</span>`; return; }
+  const n = nPerArm(pa,pb,pw);
+  $("o3").innerHTML = n < 0 ? `<span class="muted">${t.eq}</span>` : !isFinite(n) ? `<div class="big">${t.cap}</div>` : `<div class="big">${t.nper(n, 2*n)}</div>`;
+}
+function i18n(){
+  document.documentElement.lang = L === "zh" ? "zh-CN" : "en";
+  document.querySelectorAll("[data-i18n]").forEach(el => { const v = T[L][el.dataset.i18n]; if (typeof v === "string") el.textContent = v; });
+  $("en").setAttribute("aria-pressed", L==="en"); $("zh").setAttribute("aria-pressed", L==="zh");
+  r1(); r2(); r3();
+}
+$("en").onclick = () => { L="en"; i18n(); };
+$("zh").onclick = () => { L="zh"; i18n(); };
+["k1","n1"].forEach(id => $(id).addEventListener("input", r1));
+["ka","na","kb","nb"].forEach(id => $(id).addEventListener("input", r2));
+let timer; ["pa","pb","pw"].forEach(id => $(id).addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(r3, 150); }));
+try { if ((navigator.language||"").startsWith("zh")) L = "zh"; } catch(e) {}
+i18n();
+</script>
+</body>
+</html>

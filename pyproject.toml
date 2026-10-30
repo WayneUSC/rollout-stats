@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rollout-stats"
+version = "0.1.0"
+description = "Honest statistics for robot policy evaluations: exact intervals and tests, rollout planning, anytime-valid sequential A/B tests, paper-ready tables."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
+authors = [{ name = "Wen Chen (WayneUSC)" }]
+keywords = [
+  "robot learning", "policy evaluation", "statistics", "confidence interval", "hypothesis testing",
+  "sequential testing", "anytime-valid", "success rate", "VLA", "reproducibility",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Scientific/Engineering :: Mathematics",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = ["numpy>=1.22", "scipy>=1.9", "pandas>=1.4"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+rollout-stats = "rollout_stats.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/WayneUSC/rollout-stats"
+Issues = "https://github.com/WayneUSC/rollout-stats/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rollout_stats"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
