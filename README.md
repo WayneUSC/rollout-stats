@@ -3,7 +3,7 @@
 **Is your policy's improvement real, or 20 lucky rollouts?**
 
 [![CI](https://github.com/WayneUSC/rollout-stats/actions/workflows/ci.yml/badge.svg)](https://github.com/WayneUSC/rollout-stats/actions/workflows/ci.yml)
-![Python](https://img.shields.io/badge/python-3.9%2B-blue)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
 Real-robot evaluations are expensive, so papers report success rates from 10–50 rollouts — usually as a bare
@@ -35,7 +35,7 @@ clear — legitimately.
 pip install "git+https://github.com/WayneUSC/rollout-stats"
 ```
 
-Python 3.9+, NumPy, SciPy, pandas.
+Python 3.10+, NumPy, SciPy, pandas.
 
 ## In 60 seconds
 

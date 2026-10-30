@@ -9,7 +9,7 @@ description = "Honest statistics for robot policy evaluations: exact intervals a
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{ name = "Wen Chen (WayneUSC)" }]
 keywords = [
   "robot learning", "policy evaluation", "statistics", "confidence interval", "hypothesis testing",
